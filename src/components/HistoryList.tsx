@@ -1,11 +1,8 @@
-type HistoryClip = {
-  id: string;
-  content: string;
-};
+import type { Clip } from '../types';
 
 type HistoryListProps = {
   open: boolean;
-  clips: HistoryClip[];
+  clips: Clip[];
   onToggle: () => void;
   onCopy: (text: string) => void;
 };

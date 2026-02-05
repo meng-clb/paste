@@ -3,6 +3,15 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 
 vi.mock('./hooks/useAuth', () => ({ useAuth: () => ({ loading: false, user: null }) }));
+vi.mock('./hooks/useClips', () => ({
+  useClips: () => ({
+    latest: null,
+    history: [],
+    startHistory: () => {},
+    stopHistory: () => {},
+    syncClip: async () => ({ ok: true }),
+  }),
+}));
 vi.mock('./components/AuthPanel', () => ({ default: () => null }));
 
 describe('App', () => {
