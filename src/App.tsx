@@ -23,6 +23,11 @@ export default function App() {
     setStatus(result.ok ? 'Synced' : result.error ?? 'Failed');
   }
 
+  async function handleCopy(text: string) {
+    await navigator.clipboard.writeText(text);
+    setStatus('Copied');
+  }
+
   function toggleHistory() {
     setOpen((prev) => {
       const next = !prev;
@@ -49,12 +54,12 @@ export default function App() {
           onSync={handleSync}
           disabled={!user}
         />
-        <LatestCard clip={latest} />
+        <LatestCard clip={latest} onCopy={handleCopy} />
         <HistoryList
           open={open}
           clips={history}
           onToggle={toggleHistory}
-          onCopy={() => {}}
+          onCopy={handleCopy}
         />
       </section>
     </div>
