@@ -4,7 +4,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 
 export default function AuthPanel() {
   const [email, setEmail] = useState('');
@@ -20,8 +21,18 @@ export default function AuthPanel() {
 
   async function handleSignUp() {
     setError(null);
-    await createUserWithEmailAndPassword(auth, email, password).catch((e) =>
-      setError(e.message)
+    const result = await createUserWithEmailAndPassword(auth, email, password).catch((e) => {
+      setError(e.message);
+      return null;
+    });
+    if (!result) return;
+    await setDoc(
+      doc(db, 'users', result.user.uid),
+      {
+        email: result.user.email,
+        createdAt: result.user.metadata.creationTime ?? null,
+      },
+      { merge: true }
     );
   }
 
