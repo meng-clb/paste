@@ -90,7 +90,9 @@ export default function DashboardPage({
   const [recentCopiedId, setRecentCopiedId] = useState<string | null>(null);
   const [historyCopiedId, setHistoryCopiedId] = useState<string | null>(null);
   const [modalCopiedId, setModalCopiedId] = useState<string | null>(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const tooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tooltipHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recentCopiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -339,6 +341,32 @@ export default function DashboardPage({
   }
 
   useEffect(() => {
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      if (!accountMenuRef.current) return;
+      const target = event.target;
+      if (target instanceof Node && !accountMenuRef.current.contains(target)) {
+        setAccountMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setAccountMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
     setRecentCopiedId(null);
     if (recentCopiedTimerRef.current) {
       clearTimeout(recentCopiedTimerRef.current);
@@ -373,6 +401,8 @@ export default function DashboardPage({
       return;
     }
 
+    setAccountMenuOpen(false);
+
     const prevBodyOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
 
@@ -398,7 +428,7 @@ export default function DashboardPage({
   return (
     <div
       data-testid="dashboard-root"
-      className="syncclip-login relative isolate overflow-hidden bg-gradient-to-br from-indigo-50 via-slate-50 to-violet-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-slate-100 h-screen transition-colors duration-300 flex flex-col"
+      className="syncclip-login relative isolate overflow-hidden overflow-x-hidden bg-gradient-to-br from-indigo-50 via-slate-50 to-violet-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-slate-100 h-screen h-[100dvh] md:h-screen transition-colors duration-300 flex flex-col"
     >
       <div
         data-testid="dashboard-bg-shape-1"
@@ -413,7 +443,7 @@ export default function DashboardPage({
       <div
         className={`${historyModalOpen ? 'blur-sm pointer-events-none select-none' : ''} relative z-10 h-full flex flex-col`}
       >
-        <nav className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 flex justify-between items-center shrink-0">
+        <nav className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 sm:py-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
               剪贴板桥
@@ -431,7 +461,7 @@ export default function DashboardPage({
               <span className="material-symbols-outlined hidden dark:block">light_mode</span>
             </button>
 
-            <div className="flex items-center gap-3 relative group">
+            <div ref={accountMenuRef} className="flex items-center gap-3 relative">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-semibold">用户账户</p>
                 <p className="text-xs text-slate-500">{email}</p>
@@ -439,15 +469,24 @@ export default function DashboardPage({
               <button
                 type="button"
                 aria-label="账户菜单"
+                aria-expanded={accountMenuOpen}
                 className="bg-card-light dark:bg-card-dark p-3 rounded-full border border-slate-200 dark:border-slate-800 hover:shadow-md transition-all"
+                onClick={() => setAccountMenuOpen((current) => !current)}
               >
                 <span className="material-symbols-outlined block">person</span>
               </button>
-              <div className="absolute right-0 top-full mt-2 w-48 bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-10">
+              <div
+                data-testid="account-menu-panel"
+                hidden={!accountMenuOpen}
+                className={`absolute right-0 top-full mt-2 w-48 bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg transition-all z-10 ${accountMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+              >
                 <div className="p-2">
                   <button
                     className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center gap-2"
-                    onClick={onSignOut}
+                    onClick={() => {
+                      setAccountMenuOpen(false);
+                      void onSignOut();
+                    }}
                   >
                     <span className="material-symbols-outlined text-sm">logout</span>
                     退出登录
@@ -458,7 +497,7 @@ export default function DashboardPage({
           </div>
         </nav>
 
-        <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 pb-3 flex-1 min-h-0 flex flex-col">
+        <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:pb-3 flex-1 min-h-0 flex flex-col overflow-y-auto lg:overflow-hidden">
           <header className="mb-4 shrink-0">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 leading-tight">
               跨设备传文本，只需几秒。
@@ -468,12 +507,12 @@ export default function DashboardPage({
             </p>
           </header>
 
-          <div className="grid flex-1 min-h-0 grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch lg:flex-1 lg:min-h-0">
             <div className="lg:col-span-7">
-              <div className="syncclip-glass-card p-4 md:p-5 rounded-lg h-full min-h-0 flex flex-col">
+              <div className="syncclip-glass-card p-4 md:p-5 rounded-lg lg:h-full flex flex-col">
                 <h2 className="text-xl font-bold mb-3">粘贴并同步</h2>
                 <textarea
-                  className="flex-grow min-h-0 w-full p-4 mono-text text-base rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none transition-all dark:placeholder-slate-600"
+                  className="w-full p-4 mono-text text-sm sm:text-base min-h-[180px] lg:min-h-0 flex-grow rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary focus:border-primary outline-none resize-none transition-all dark:placeholder-slate-600"
                   placeholder="在这里粘贴文本..."
                   value={draft}
                   onChange={(event) => onDraftChange(event.target.value)}
@@ -493,7 +532,7 @@ export default function DashboardPage({
               </div>
             </div>
 
-            <div className="lg:col-span-5 flex flex-col gap-4 min-h-0">
+            <div className="lg:col-span-5 flex flex-col gap-4 lg:min-h-0">
               <div className="syncclip-glass-card p-4 md:p-5 rounded-lg">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-bold">最近记录</h2>
@@ -545,7 +584,7 @@ export default function DashboardPage({
                 )}
               </div>
 
-              <div className="syncclip-glass-card p-4 md:p-5 rounded-lg flex-grow min-h-0 flex flex-col">
+              <div className="syncclip-glass-card p-4 md:p-5 rounded-lg lg:flex-grow lg:min-h-0 flex flex-col">
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="text-xl font-bold">历史记录</h2>
                   <button
@@ -617,17 +656,17 @@ export default function DashboardPage({
           </div>
 
           <div className="mt-4 shrink-0 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="syncclip-glass-card p-3 md:p-4 rounded-lg md:col-span-3 flex items-center justify-around text-center">
+            <div className="syncclip-glass-card p-3 md:p-4 rounded-lg md:col-span-3 flex flex-wrap sm:flex-nowrap items-center justify-around text-center gap-3 sm:gap-0">
               <div>
                 <p className="text-2xl md:text-3xl font-bold text-primary">{totalClips}</p>
                 <p className="text-xs uppercase tracking-widest text-slate-500 mt-1">总剪贴数</p>
               </div>
-              <div className="h-12 w-px bg-slate-200 dark:bg-slate-800" />
+              <div className="hidden sm:block h-12 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
                 <p className="text-2xl md:text-3xl font-bold text-primary">1</p>
                 <p className="text-xs uppercase tracking-widest text-slate-500 mt-1">已连接设备</p>
               </div>
-              <div className="h-12 w-px bg-slate-200 dark:bg-slate-800" />
+              <div className="hidden sm:block h-12 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
                 <p className="text-2xl md:text-3xl font-bold text-primary">{`${storageUsedKb.toFixed(1)}KB`}</p>
                 <p className="text-xs uppercase tracking-widest text-slate-500 mt-1">已用存储</p>
@@ -636,7 +675,7 @@ export default function DashboardPage({
           </div>
         </main>
 
-        <footer className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-2 border-t border-slate-200/70 dark:border-slate-800/70 text-center shrink-0">
+        <footer className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] sm:pb-2 border-t border-slate-200/70 dark:border-slate-800/70 text-center shrink-0">
           <p className="text-[11px] text-slate-400">© 2026 剪贴板桥。随时随地同步内容。</p>
         </footer>
       </div>
@@ -647,9 +686,9 @@ export default function DashboardPage({
             role="dialog"
             aria-modal="true"
             aria-label="全部历史"
-            className="bg-card-light dark:bg-card-dark w-full max-w-2xl h-[80vh] rounded-lg shadow-2xl border border-slate-200/50 dark:border-slate-800 flex flex-col overflow-hidden"
+            className="bg-card-light dark:bg-card-dark w-full max-w-2xl h-[88dvh] sm:h-[80vh] rounded-lg shadow-2xl border border-slate-200/50 dark:border-slate-800 flex flex-col overflow-hidden"
           >
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">全部历史</h2>
                 <div className="flex items-center gap-4">
@@ -687,7 +726,7 @@ export default function DashboardPage({
 
             <div
               data-testid="history-modal-list"
-              className="flex-grow min-h-0 overflow-y-auto overscroll-contain custom-scrollbar p-6 space-y-4"
+              className="flex-grow min-h-0 overflow-y-auto overscroll-contain custom-scrollbar p-4 sm:p-6 space-y-4"
             >
               {modalHistory.length > 0 ? (
                 modalHistory.map((clip) => {

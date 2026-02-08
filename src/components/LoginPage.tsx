@@ -114,12 +114,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="syncclip-login min-h-screen relative isolate overflow-hidden bg-gradient-to-br from-indigo-50 via-slate-50 to-violet-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-slate-100 flex items-center justify-center p-4">
+    <div className="syncclip-login min-h-screen min-h-[100dvh] relative isolate overflow-x-hidden overflow-y-auto sm:overflow-hidden bg-gradient-to-br from-indigo-50 via-slate-50 to-violet-100 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 text-slate-900 dark:text-slate-100 flex items-start sm:items-center justify-center p-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+1rem)]">
       <div className="syncclip-floating-shape bg-blue-400 w-80 h-80 -top-16 -left-14" />
       <div className="syncclip-floating-shape bg-indigo-400 w-[420px] h-[420px] -bottom-24 -right-24" />
       <div className="syncclip-floating-shape bg-pink-300 w-72 h-72 top-1/4 left-1/2" />
 
-      <div className="absolute top-8 right-8 z-20">
+      <div className="absolute top-[calc(env(safe-area-inset-top)+0.5rem)] right-4 sm:right-8 z-20">
         <button
           type="button"
           className="syncclip-glass-card p-3 rounded-full text-slate-700 dark:text-slate-200 hover:scale-105 transition-transform"
@@ -137,7 +137,7 @@ export default function LoginPage() {
 
       <div
         data-testid="login-glass-card"
-        className="syncclip-glass-card relative z-10 w-full max-w-md rounded-[1.75rem] p-8 md:p-10 border border-white/40 dark:border-white/10"
+        className="syncclip-glass-card relative z-10 w-full max-w-md rounded-[1.75rem] p-6 sm:p-8 md:p-10 border border-white/40 dark:border-white/10"
       >
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-4">
@@ -277,7 +277,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="absolute bottom-6 left-0 right-0 text-center z-10">
+      <div className="mt-6 sm:mt-0 sm:absolute sm:bottom-6 sm:left-0 sm:right-0 text-center z-10">
         <p className="text-xs text-slate-500 dark:text-slate-500">© 2026 Clipboard Bridge. All rights reserved.</p>
       </div>
     </div>

@@ -129,6 +129,21 @@ describe('App', () => {
     );
   });
 
+  it('toggles account menu by click for touch/mobile usage', () => {
+    render(<App />);
+
+    const accountMenuButton = screen.getByRole('button', { name: /账户菜单/i });
+    const accountMenuPanel = screen.getByTestId('account-menu-panel');
+
+    expect(accountMenuButton).toHaveAttribute('aria-expanded', 'false');
+    expect(accountMenuPanel).toHaveAttribute('hidden');
+
+    fireEvent.click(accountMenuButton);
+
+    expect(accountMenuButton).toHaveAttribute('aria-expanded', 'true');
+    expect(accountMenuPanel).not.toHaveAttribute('hidden');
+  });
+
   it('shows latest only in recent list and keeps main history non-scrollable', () => {
     mocks.clips.latest = {
       id: 'clip-1',
