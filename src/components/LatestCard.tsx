@@ -8,7 +8,7 @@ type LatestCardProps = {
 export default function LatestCard({ clip, onCopy }: LatestCardProps) {
   return (
     <div className="card">
-      <div className="card-title">Latest clip</div>
+      <div className="card-title">最新记录</div>
       {clip ? (
         <div>
           <div className="clip-text">{clip.content}</div>
