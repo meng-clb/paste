@@ -5,5 +5,6 @@ export type Clip = {
   content: string;
   hash: string;
   deviceLabel: string;
+  deviceId?: string;
   createdAt: Timestamp | null;
 };

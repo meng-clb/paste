@@ -5,6 +5,7 @@ type DashboardPageProps = {
   email: string;
   latest: Clip | null;
   history: Clip[];
+  connectedDeviceCount: number;
   historyModalOpen: boolean;
   draft: string;
   status: string | null;
@@ -72,6 +73,7 @@ export default function DashboardPage({
   email,
   latest,
   history,
+  connectedDeviceCount,
   historyModalOpen,
   draft,
   status,
@@ -663,7 +665,9 @@ export default function DashboardPage({
               </div>
               <div className="hidden sm:block h-12 w-px bg-slate-200 dark:bg-slate-800" />
               <div>
-                <p className="text-2xl md:text-3xl font-bold text-primary">1</p>
+                <p data-testid="connected-device-count" className="text-2xl md:text-3xl font-bold text-primary">
+                  {connectedDeviceCount}
+                </p>
                 <p className="text-xs uppercase tracking-widest text-slate-500 mt-1">已连接设备</p>
               </div>
               <div className="hidden sm:block h-12 w-px bg-slate-200 dark:bg-slate-800" />

@@ -60,6 +60,7 @@ describe('useClips', () => {
         content: 'hello',
         hash: hashContent('hello'),
         deviceLabel: 'web',
+        deviceId: expect.any(String),
         createdAt: { mock: 'timestamp' },
       })
     );

@@ -38,6 +38,9 @@ const mocks = vi.hoisted(() => {
   };
   return {
     auth,
+    devicePresence: {
+      connectedDeviceCount: 1,
+    },
     clips: {
       latest: null as Clip | null,
       history,
@@ -51,6 +54,9 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock('./hooks/useAuth', () => ({ useAuth: () => mocks.auth }));
+vi.mock('./hooks/useDevicePresence', () => ({
+  useDevicePresence: () => mocks.devicePresence.connectedDeviceCount,
+}));
 vi.mock('./hooks/useClips', () => ({
   useClips: () => mocks.clips,
 }));
@@ -97,7 +103,11 @@ describe('App', () => {
   beforeEach(() => {
     mocks.auth.loading = false;
     mocks.auth.user = { uid: 'user-1', email: '123456@163.com' };
+    mocks.devicePresence.connectedDeviceCount = 1;
     mocks.clips.latest = null;
+    mocks.clips.history.forEach((clip) => {
+      delete (clip as Clip & { deviceId?: string }).deviceId;
+    });
     mocks.clips.startHistory.mockClear();
     mocks.clips.stopHistory.mockClear();
     mocks.clips.syncClip.mockClear();
@@ -142,6 +152,14 @@ describe('App', () => {
 
     expect(accountMenuButton).toHaveAttribute('aria-expanded', 'true');
     expect(accountMenuPanel).not.toHaveAttribute('hidden');
+  });
+
+  it('shows connected devices from login presence tracker instead of clips history', () => {
+    mocks.devicePresence.connectedDeviceCount = 2;
+
+    render(<App />);
+
+    expect(screen.getByTestId('connected-device-count')).toHaveTextContent('2');
   });
 
   it('shows latest only in recent list and keeps main history non-scrollable', () => {

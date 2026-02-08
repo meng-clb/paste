@@ -15,6 +15,7 @@ import {
 import { db } from '../lib/firebase';
 import type { Clip } from '../types';
 import { hashContent, normalizeContent, shouldSkipDuplicate } from '../lib/clipboard';
+import { getOrCreateDeviceId } from '../lib/device';
 
 type SyncResult = { ok: true } | { ok: false; error: string };
 
@@ -24,6 +25,7 @@ export function useClips(uid: string | null) {
   const historyUnsub = useRef<null | (() => void)>(null);
   const lastHash = useRef<string | null>(null);
   const lastAt = useRef<number | null>(null);
+  const deviceId = useRef(getOrCreateDeviceId());
 
   useEffect(() => {
     if (!uid) {
@@ -86,6 +88,7 @@ export function useClips(uid: string | null) {
         content: normalized,
         hash,
         deviceLabel: 'web',
+        deviceId: deviceId.current,
         createdAt: serverTimestamp(),
       });
       return { ok: true };

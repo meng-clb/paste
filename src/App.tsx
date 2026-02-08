@@ -5,10 +5,12 @@ import LoginPage from './components/LoginPage';
 import DashboardPage from './components/DashboardPage';
 import { useAuth } from './hooks/useAuth';
 import { useClips } from './hooks/useClips';
+import { useDevicePresence } from './hooks/useDevicePresence';
 import { auth } from './lib/firebase';
 
 export default function App() {
   const { user, loading } = useAuth();
+  const connectedDeviceCount = useDevicePresence(user?.uid ?? null, user?.email ?? null);
   const { latest, history, startHistory, stopHistory, syncClip, clearHistory, deleteClip } = useClips(
     user?.uid ?? null
   );
@@ -98,6 +100,7 @@ export default function App() {
       email={user.email ?? '已登录用户'}
       latest={latest}
       history={history}
+      connectedDeviceCount={connectedDeviceCount}
       historyModalOpen={historyModalOpen}
       draft={draft}
       status={status}
