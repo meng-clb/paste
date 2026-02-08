@@ -1,13 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import {
+  GoogleAuthProvider,
+  browserLocalPersistence,
+  browserSessionPersistence,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  setPersistence,
   signInWithEmailAndPassword,
+  signInWithPopup,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 
-type PendingAction = 'sign-in' | 'sign-up' | 'reset-password' | null;
+type PendingAction = 'sign-in' | 'sign-up' | 'reset-password' | 'google-sign-in' | null;
 
 function toggleTheme() {
   document.documentElement.classList.toggle('dark');
@@ -17,9 +22,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+
+  async function applyAuthPersistence() {
+    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+  }
 
   async function handleSignIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,10 +41,14 @@ export default function LoginPage() {
     setError(null);
     setStatus(null);
     setPendingAction('sign-in');
-    await signInWithEmailAndPassword(auth, email.trim(), password).catch((nextError: unknown) => {
+    try {
+      await applyAuthPersistence();
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (nextError: unknown) {
       setError(nextError instanceof Error ? nextError.message : '登录失败');
-    });
-    setPendingAction(null);
+    } finally {
+      setPendingAction(null);
+    }
   }
 
   async function handleSignUp() {
@@ -46,14 +60,9 @@ export default function LoginPage() {
     setError(null);
     setStatus(null);
     setPendingAction('sign-up');
-    const result = await createUserWithEmailAndPassword(auth, email.trim(), password).catch(
-      (nextError: unknown) => {
-        setError(nextError instanceof Error ? nextError.message : '注册失败');
-        return null;
-      }
-    );
-
-    if (result?.user) {
+    try {
+      await applyAuthPersistence();
+      const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
       await setDoc(
         doc(db, 'users', result.user.uid),
         {
@@ -62,9 +71,11 @@ export default function LoginPage() {
         },
         { merge: true }
       );
+    } catch (nextError: unknown) {
+      setError(nextError instanceof Error ? nextError.message : '注册失败');
+    } finally {
+      setPendingAction(null);
     }
-
-    setPendingAction(null);
   }
 
   async function handleForgotPassword() {
@@ -85,6 +96,21 @@ export default function LoginPage() {
         setError(nextError instanceof Error ? nextError.message : '发送重置密码邮件失败');
       });
     setPendingAction(null);
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    setStatus(null);
+    setPendingAction('google-sign-in');
+    try {
+      await applyAuthPersistence();
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (nextError: unknown) {
+      setError(nextError instanceof Error ? nextError.message : 'Google 登录失败');
+    } finally {
+      setPendingAction(null);
+    }
   }
 
   return (
@@ -187,6 +213,8 @@ export default function LoginPage() {
               id="remember"
               type="checkbox"
               className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-500 bg-white/50"
+              checked={rememberMe}
+              onChange={(event) => setRememberMe(event.target.checked)}
             />
             <label htmlFor="remember" className="text-sm text-slate-600 dark:text-slate-400">
               在此设备记住我
@@ -224,20 +252,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <button
             type="button"
-            className="flex items-center justify-center gap-2 py-3 syncclip-glass-card rounded-2xl hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors text-slate-700 dark:text-slate-200 text-sm font-semibold"
+            className="flex items-center justify-center gap-2 py-3 syncclip-glass-card rounded-2xl hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors text-slate-700 dark:text-slate-200 text-sm font-semibold disabled:opacity-70"
+            onClick={handleGoogleSignIn}
+            disabled={pendingAction !== null}
           >
             <span className="material-symbols-rounded text-base">language</span>
-            Google
-          </button>
-          <button
-            type="button"
-            className="flex items-center justify-center gap-2 py-3 syncclip-glass-card rounded-2xl hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors text-slate-700 dark:text-slate-200 text-sm font-semibold"
-          >
-            <span className="material-symbols-rounded text-base">laptop_mac</span>
-            Apple
+            {pendingAction === 'google-sign-in' ? 'Google 登录中...' : 'Google'}
           </button>
         </div>
 
